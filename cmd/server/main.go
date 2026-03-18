@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
 
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
@@ -44,6 +46,7 @@ func main() {
 			publish(amqpChann, false)
 		case "quit":
 			fmt.Println("Quiting")
+			Exit()
 			return
 		default:
 			fmt.Println("don't understand the command.")
@@ -57,4 +60,11 @@ func publish(amqpChann *amqp.Channel, IsPaused bool) {
 		fmt.Println("Error:", err)
 		return
 	}
+}
+
+func Exit() {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	<-signalChan
+	fmt.Println("\nThe program is shutting down and close the connection.")
 }

@@ -34,25 +34,42 @@ func main() {
 		return
 	}
 
-	gamelogic.PrintServerHelp()
+	gamestate := gamelogic.NewGameState(name)
 	for {
 		words := gamelogic.GetInput()
-		if len(words) == 0 {
-			continue
-		}
+		switch words[0] {
+		case "spawn":
+			err = gamestate.CommandSpawn(words)
+			if err != nil {
+				fmt.Println("msg", err)
+				continue
+			}
 
-		if words[0] == "pause" {
-			fmt.Println("sending a pause message")
-		} else if words[0] == "resume" {
-			fmt.Println("sending a resume message")
-		} else if words[0] == "quit" {
-			break
-		} else {
+		case "move":
+			_, err = gamestate.CommandMove(words)
+			if err != nil {
+				fmt.Println("msg", err)
+				continue
+			}
+			fmt.Println("it worked.")
 
+		case "status":
+			gamestate.CommandStatus()
+
+		case "help":
+			gamelogic.PrintClientHelp()
+
+		case "spam":
+			fmt.Println("Spamming not allowed yet!")
+
+		case "quit":
+			gamelogic.PrintQuit()
+			Exit()
+
+		default:
+			fmt.Println("error message: Unknown Command")
 		}
 	}
-
-	Exit()
 }
 
 func Exit() {
