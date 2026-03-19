@@ -29,28 +29,7 @@ func main() {
 	}
 	defer amqpChann.Close()
 
-	q, err := amqpChann.QueueDeclare(
-		routing.GameLogSlug,
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		fmt.Println("error...", err)
-		return
-	}
-	err = amqpChann.QueueBind(
-		q.Name,
-		routing.GameLogSlug+".*",
-		routing.ExchangePerilTopic,
-		false,
-		nil,
-	)
-	if err != nil {
-		return
-	}
+	amqpChann, _, err = pubsub.DeclareAndBind(amqpConn, routing.ExchangePerilTopic, routing.GameLogSlug, routing.GameLogSlug+".*", "Durable")
 
 	gameloop(amqpChann)
 
