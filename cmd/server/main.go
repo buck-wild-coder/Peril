@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/bootdotdev/learn-pub-sub-starter/internal/gamelogic"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/pubsub"
 	"github.com/bootdotdev/learn-pub-sub-starter/internal/routing"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -30,28 +29,31 @@ func main() {
 	}
 	defer amqpChann.Close()
 
-	gamelogic.PrintServerHelp()
-	for {
-		words := gamelogic.GetInput()
-		if len(words) == 0 {
-			continue
-		}
-
-		switch words[0] {
-		case "pause":
-			fmt.Println("sending a pause message")
-			publish(amqpChann, true)
-		case "resume":
-			fmt.Println("sending a resume message")
-			publish(amqpChann, false)
-		case "quit":
-			fmt.Println("Quiting")
-			Exit()
-			return
-		default:
-			fmt.Println("don't understand the command.")
-		}
+	q, err := amqpChann.QueueDeclare(
+		routing.GameLogSlug,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		fmt.Println("error...", err)
+		return
 	}
+	err = amqpChann.QueueBind(
+		q.Name,
+		routing.GameLogSlug+".*",
+		routing.ExchangePerilTopic,
+		false,
+		nil,
+	)
+	if err != nil {
+		return
+	}
+
+	gameloop(amqpChann)
+
 }
 
 func publish(amqpChann *amqp.Channel, IsPaused bool) {
